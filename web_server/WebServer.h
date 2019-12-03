@@ -85,8 +85,8 @@ private:
 
     }
     void _start_server(){
-        // Listen on port 11111
-        _endpoint.listen(11111);
+        // Listen on port 11111 and use only IpV4 address family
+        _endpoint.listen(boost::asio::ip::tcp::v4(),11111);
 
         // Queues a connection accept operation
         _endpoint.start_accept();

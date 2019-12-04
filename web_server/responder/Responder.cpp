@@ -315,7 +315,9 @@ json11::Json Responder::_tracker(json11::Json const &action) {
 //{"x":30(%), "y":40(%), "height": 20(%), "width":30(%)}
 json11::Json Responder::__select_roi_tracker(json11::Json const &data) {
     json11::Json response;
-    if (data.string_value() != "") {
+    std::cout << "__select_roi_tracker data: " << data.dump() << std::endl;
+    if (!data.string_value().empty()) {
+        std::cout << "Generation respond" << std::endl;
         response = json11::Json::object{{"Response",json11::Json::object{
                 {"service", "TRACKER"},
                 {"action", json11::Json::object{

@@ -55,8 +55,8 @@ int ClientPTZ::getStatus(std::string profileToken, StatusPTZ &status){
         status = StatusPTZ(tptz__GetStatusResponse->PTZStatus->Position->PanTilt->x,
                            tptz__GetStatusResponse->PTZStatus->Position->PanTilt->y,
                            tptz__GetStatusResponse->PTZStatus->Position->Zoom->x);
-        std::cout << "PAN: " << tptz__GetStatusResponse->PTZStatus->Position->PanTilt->x << std::endl << "TILT: " << tptz__GetStatusResponse->PTZStatus->Position->PanTilt->y << std::endl;
-        std::cout << "ZOOM:" << tptz__GetStatusResponse->PTZStatus->Position->Zoom->x << std::endl;
+        //std::cout << "PAN: " << tptz__GetStatusResponse->PTZStatus->Position->PanTilt->x << std::endl << "TILT: " << tptz__GetStatusResponse->PTZStatus->Position->PanTilt->y << std::endl;
+        //std::cout << "ZOOM:" << tptz__GetStatusResponse->PTZStatus->Position->Zoom->x << std::endl;
 
     }else{
         //PrintErr(proxyPTZ.soap);

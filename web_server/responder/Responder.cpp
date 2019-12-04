@@ -164,12 +164,12 @@ json11::Json Responder::_overlay(json11::Json const &action) {
         }
     }else {
         cv::Mat png_image(1080, 1920, CV_8UC4, cv::Scalar(0, 0, 0, 0));
-        int x_mod = defautl_w * _region.x() / 100;
-        int y_mod = defautl_h * _region.y() / 100;
-        int h_mod = defautl_h * _region.height() / 100;
-        int w_mod = defautl_w * _region.width() / 100;
+        int x_mod =  defautl_w * (_region.x() / 100);
+        int y_mod =  defautl_h * (_region.y() / 100);
+        int x1_mod = x_mod + defautl_h * (_region.height() / 100);
+        int y1_mod = y_mod + defautl_w * (_region.width() / 100);
 
-        cv::Point p3(x_mod, y_mod), p4(x_mod + w_mod, y_mod + h_mod);
+        cv::Point p3(y_mod, x_mod), p4(y1_mod, x1_mod);
 
         cv::Scalar colorRectangle1(0, 0, 255, 255);
         cv::Scalar colorRectangle1Green(255, 0, 0, 255);

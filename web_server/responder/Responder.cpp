@@ -131,9 +131,14 @@ json11::Json Responder::_ptz(json11::Json const &action) {
 
 json11::Json Responder::_overlay(json11::Json const &action) {
     static bool squeare = true;
+    int defautl_y = 0;
+    int defautl_x = 0;
+    int defautl_w = 1920;
+    int defautl_h = 1080;
+
     if (action["data"]["id"].is_null()) {
-        cv::Mat png_image(1080, 1920, CV_8UC4, cv::Scalar(0, 0, 0, 0));
-        cv::Point p3(400, 400), p4(800, 800);
+        cv::Mat png_image(defautl_h, defautl_w, CV_8UC4, cv::Scalar(0, 0, 0, 0));
+        cv::Point p3(defautl_x, defautl_y), p4(defautl_w, defautl_h);
         int thicknessRectangle1 = 3;
         cv::Scalar colorRectangle1(0, 255, 00, 255);
         cv::rectangle(png_image, p3, p4, colorRectangle1, thicknessRectangle1);
@@ -159,7 +164,12 @@ json11::Json Responder::_overlay(json11::Json const &action) {
         }
     }else {
         cv::Mat png_image(1080, 1920, CV_8UC4, cv::Scalar(0, 0, 0, 0));
-        cv::Point p3(400, 400), p4(800, 800);
+        int x_mod = defautl_w * _region.x() / 100;
+        int y_mod = defautl_h * _region.y() / 100;
+        int h_mod = defautl_h * _region.height() / 100;
+        int w_mod = defautl_w * _region.width() / 100;
+
+        cv::Point p3(x_mod, y_mod), p4(x_mod + w_mod, y_mod + h_mod);
 
         cv::Scalar colorRectangle1(0, 0, 255, 255);
         cv::Scalar colorRectangle1Green(255, 0, 0, 255);
@@ -317,7 +327,7 @@ json11::Json Responder::__select_roi_tracker(json11::Json const &data) {
     json11::Json response;
     std::cout << "__select_roi_tracker data: " << data.dump() << std::endl;
     if (data.dump() != "") {
-        std::cout << "Generation respond" << std::endl;
+        _region = ROI(data["x"].number_value(), data["y"].number_value(), data["height"].number_value(), data["width"].number_value());
         response = json11::Json::object{{"Response",json11::Json::object{
                 {"service", "TRACKER"},
                 {"action", json11::Json::object{

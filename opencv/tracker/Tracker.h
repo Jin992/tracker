@@ -22,7 +22,16 @@ public:
         while (true) {
             cv::Mat frame;
             _cap >> frame;
+            cv::Mat gray;
+            frame.copyTo(gray);
+            cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+            //cv2.threshold(grayscale, 128, 255, cv2.THRESH_BINARY)
+            cv::Mat blackAndWhite;
+            gray.copyTo(blackAndWhite);
+            cv::threshold(gray, blackAndWhite, 128, 255, cv::THRESH_BINARY);
             cv::imshow("Video", frame);
+            cv::imshow("VideoGray", gray);
+            cv::imshow("Binnary", blackAndWhite);
             if (frame.empty())
                 break;
             int key =cv::waitKey(1);

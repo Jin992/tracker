@@ -22,6 +22,7 @@ json11::Json Responder::process_request(std::string const &request) {
         std::cerr << err << std::endl;
         return json11::Json();
     }
+
     /// Extract Request object from json
     json11::Json::object service = json["Request"].object_items();
     /// check if service object defined
@@ -39,6 +40,8 @@ json11::Json Responder::process_request(std::string const &request) {
         return _overlay(action);
     } else if (service["service"].string_value() == "IMAGING") {
         return _imaging(action);
+    } else if (service["service"].string_value() == "TRACKER") {
+        return _tracker(action);
     }
     return json11::Json();
 }
@@ -112,24 +115,23 @@ json11::Json Responder::__ptz_move(json11::Json const &data) {
     return json11::Json();
 }
 
-json11::Json Responder::_ptz(json11::Json const &request) {
-    if (!request["data"].is_null()) {
-        json11::Json::object data = request["data"].object_items();
-        if (request["type"].string_value() == "move") {
+json11::Json Responder::_ptz(json11::Json const &action) {
+    if (!action["data"].is_null()) {
+        json11::Json::object data = action["data"].object_items();
+        if (action["type"].string_value() == "move") {
             return __ptz_move(data);
         }
     } else {
-        if (request["type"].string_value() == "status") {
+        if (action["type"].string_value() == "status") {
             return __ptz_status("status");
         }
     }
     return json11::Json();
 }
 
-json11::Json Responder::_overlay(json11::Json const &request) {
+json11::Json Responder::_overlay(json11::Json const &action) {
     static bool squeare = true;
-    std::cout << request["data"]["id"].is_null() << std::endl;
-    if (request["data"]["id"].is_null()) {
+    if (action["data"]["id"].is_null()) {
         cv::Mat png_image(1080, 1920, CV_8UC4, cv::Scalar(0, 0, 0, 0));
         cv::Point p3(400, 400), p4(800, 800);
         int thicknessRectangle1 = 3;
@@ -141,9 +143,9 @@ json11::Json Responder::_overlay(json11::Json const &request) {
         for (int i = 0; i < buf.size(); i++)
             enc_msg[i] = buf[i];
         std::string encoded = base64_encode(enc_msg, buf.size());
-        json11::Json::object data = request["data"].object_items();
+        json11::Json::object data = action["data"].object_items();
 
-        if (request["type"].string_value() == "get") {
+        if (action["type"].string_value() == "get") {
             json11::Json response = json11::Json::object{
                     {"Response", json11::Json::object{
                             {"service", "OVERLAY"},
@@ -176,9 +178,9 @@ json11::Json Responder::_overlay(json11::Json const &request) {
         for (int i = 0; i < buf.size(); i++)
             enc_msg[i] = buf[i];
         std::string encoded = base64_encode(enc_msg, buf.size());
-        json11::Json::object data = request["data"].object_items();
+        json11::Json::object data = action["data"].object_items();
 
-        if (request["type"].string_value() == "get") {
+        if (action["type"].string_value() == "get") {
             json11::Json response = json11::Json::object{
                 {"Response", json11::Json::object{
                     {"service", "OVERLAY"},
@@ -246,11 +248,11 @@ json11::Json Responder::__init_get(json11::Json const &data) {
     }
 }
 
-json11::Json Responder::_init(json11::Json const &request) {
-    json11::Json::object data = request["data"].object_items();
-    if (request["type"].string_value() == "get") {
+json11::Json Responder::_init(json11::Json const &action) {
+    json11::Json::object data = action["data"].object_items();
+    if (action["type"].string_value() == "get") {
         return __init_get(data);
-    } else if (request["type"].string_value() == "set") {
+    } else if (action["type"].string_value() == "set") {
         return  __init_set(data);
     }
     return json11::Json();
@@ -293,12 +295,38 @@ json11::Json Responder::__get_imaging(json11::Json const &data) {
     return response;
 }
 
-json11::Json Responder::_imaging(json11::Json const &request){
-    json11::Json::object data = request["data"].object_items();
-    if (request["type"].string_value() == "set") {
+json11::Json Responder::_imaging(json11::Json const &action){
+    json11::Json::object data = action["data"].object_items();
+    if (action["type"].string_value() == "set") {
         return __set_imaging(data);
-    } else if (request["type"].string_value() == "status") {
+    } else if (action["type"].string_value() == "status") {
         return __get_imaging(data);
     }
     return json11::Json();
+}
+
+json11::Json Responder::_tracker(json11::Json const &action) {
+    json11::Json::object data = action["data"].object_items();
+    if (action["type"].string_value() == "select_roi") {
+        return __select_roi_tracker(data);
+    }
+    return json11::Json();
+}
+//{"x":30(%), "y":40(%), "height": 20(%), "width":30(%)}
+json11::Json Responder::__select_roi_tracker(json11::Json const &data) {
+    json11::Json response;
+    if (data.string_value() != "") {
+        response = json11::Json::object{{"Response",json11::Json::object{
+                {"service", "TRACKER"},
+                {"action", json11::Json::object{
+                {"type", "select_roi"},
+                {"data", json11::Json::object{
+                        {"x", data["x"].number_value()},
+                        {"y", data["y"].number_value()},
+                        {"height", data["height"].number_value()},
+                        {"width", data["width"].number_value()}}
+                }}}}
+        }};
+    }
+    return response;
 }

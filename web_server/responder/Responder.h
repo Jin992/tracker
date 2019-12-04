@@ -20,22 +20,22 @@ private:
     /// PTZ Request parser
     json11::Json __ptz_status(std::string type);
     json11::Json __ptz_move(json11::Json const &data);
-    json11::Json _ptz(json11::Json const &request);
+    json11::Json _ptz(json11::Json const &action);
     /// INIT Request parser
     json11::Json __init_set(json11::Json const &data);
     json11::Json __init_get(json11::Json const &data);
-    json11::Json _init(json11::Json const &request);
+    json11::Json _init(json11::Json const &action);
     /// OVERLAY Request parser
-    json11::Json _overlay(json11::Json const &request);
+    json11::Json _overlay(json11::Json const &action);
 
     /// IMAGING Request parser
-    json11::Json _imaging(json11::Json const &request);
+    json11::Json _imaging(json11::Json const &action);
     json11::Json __set_imaging(json11::Json const &data);
     json11::Json __get_imaging(json11::Json const &data);
 
     /// TRACKER Request parser
-    json11::Json _tracker(json11::Json const &request);
-    json11::Json __select_roi_tracker(json11::Json const &request);
+    json11::Json _tracker(json11::Json const &action);
+    json11::Json __select_roi_tracker(json11::Json const &data);
 
 
 private:

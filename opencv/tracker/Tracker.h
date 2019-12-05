@@ -73,35 +73,30 @@ private:
 				ptr++;
 			}
 		}
-		//std::chrono::steady_clock::now();
-
+		ImagingParams params;
+		_cam_ctl.imaging()->GetImagingSettings("", params);
+		float brightness = params.brightness().current();
+		float contrast = params.contrast().current();
+		bool send = false;
 		if ( std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - _brightness_timer).count() > 100000) {
-			ImagingParams params;
-			_cam_ctl.imaging()->GetImagingSettings("", params);
-			if (min == 0) {
-				_cam_ctl.imaging()->setImagingSettings("", params.brightness().current() + 1, -1, true);
-				std::cout << "Brighness up to " << params.brightness().current() + 1 << std::endl;
-			}else {
-				std::cout << "Brighness down to " << params.brightness().current() - 1 << std::endl;
-				_cam_ctl.imaging()->setImagingSettings("", params.brightness().current() - 1, -1, true);
-			}
+			if (min == 0) brightness = brightness + 1;
+			else brightness = brightness - 1;
+			send = true;
+			std::cout << "Brighness " << brightness << std::endl;
 			_brightness_timer = std::chrono::steady_clock::now();
 		}
 		if ( std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - _contrast_timer).count() > 100000) {
-			ImagingParams params;
-			_cam_ctl.imaging()->GetImagingSettings("", params);
-			if (max == 255) {
-				_cam_ctl.imaging()->setImagingSettings("", -1, params.contrast().current() - 1, true);
-				std::cout << "Contrast up to " << params.contrast().current() + 1 << std::endl;
-			}
-			else {
-				_cam_ctl.imaging()->setImagingSettings("", -1, params.contrast().current() + 1, true);
-				std::cout << "Contrast down to " << params.contrast().current() - 1 << std::endl;
-			}
+			if (max == 255) contrast = contrast - 1;
+			else contrast = contrast + 1;
+			send = true;
+			std::cout << "Contrast " << contrast << std::endl;
 			_contrast_timer = std::chrono::steady_clock::now();
 		}
-
-    }
+		if (send) {
+			_cam_ctl.imaging()->setImagingSettings("", brightness, contrast, true);
+			std::cout << "Send" << std::endl;
+		}
+		}
 
     void decode_video_stream() {
     	while (true) {

@@ -16,22 +16,17 @@ public:
 	:_overlay_width(width), _overlay_height(height),_roi(width, height)
 	{}
 	ROI & roi() { return _roi; }
+
 	std::string drawRoi() {
 		cv::Mat overlay(_overlay_height, _overlay_width, CV_8UC4, cv::Scalar(0, 0, 0, 0));
-		//_roi.clear();
-		/// Get overlay imege
-		cv::Mat roi_image = _roi.roi();
-		cv::Mat roi_enchanced ;//= cv::Mat::zeros(roi_image.rows, roi_image.cols, CV_8UC4);
+		/// Get overlay image
+		ROI_Rect roi_rect = _roi.roi();
 
-
-		cv::cvtColor(roi_image,roi_enchanced,cv::COLOR_GRAY2BGRA);
-		if (!roi_image.empty())
-			roi_enchanced.copyTo(overlay(cv::Rect(_roi.y(), _roi.x(), roi_enchanced.cols, roi_enchanced.rows)));
+		if (!roi_rect.empty())
+			roi_rect.mat().copyTo(overlay(cv::Rect(roi_rect.y(), roi_rect.x(), roi_rect.mat().cols, roi_rect.mat().rows)));
 		/// Draw overlay frame
-		cv::Point p1(_roi.y(), _roi.x()), p2(_roi.y() + _roi.width(), _roi.x() + _roi.height());
-		cv::Scalar colorRectangle(255, 0, 0, 255);
-		int thicknessRectangle = 3;
-		cv::rectangle(overlay, p1, p2, colorRectangle, thicknessRectangle);
+		cv::Scalar color(255, 0, 0, 255);
+		cv::rectangle(overlay, roi_rect.top_left_point(), roi_rect.bottom_right_point(), color, 3);
 
 		std::vector<uchar> buf;
 		cv::imencode(".png", overlay, buf);

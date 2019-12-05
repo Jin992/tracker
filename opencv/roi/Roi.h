@@ -8,15 +8,64 @@
 #include <opencv4/opencv2/opencv.hpp>
 #include <mutex>
 
-class Cords {
+class ROI_Cords {
 public:
+	ROI_Cords (float x, float y, float width, float height)
+	: _x(x), _y(y), _height(height), _width(width)
+	{}
+	uint32_t x(uint32_t width)		{ return width * (_x / 100); }
+	uint32_t y(uint32_t height)		{ return height * (_y / 100); }
+	uint32_t width(uint32_t width)	{ return width * (_width / 100); }
+	uint32_t height(uint32_t height)	{ return height * (_height / 100); }
+
 private:
+	float _x;
+	float _y;
+	float _height;
+	float _width;
+};
+
+class ROI_Rect {
+public:
+	ROI_Rect(uint32_t frame_width, uint32_t frame_height, ROI_Cords cords)
+	: _x(0), _y(0), _frame_width(frame_width), _frame_height(frame_height), _cords(cords)
+	{}
+
+	bool empty() { return _roi_rect.empty(); }
+
+	void extract_roi(cv::Mat const &frame) {
+		_x = _cords.x(_frame_width);
+		_y = _cords.y(_frame_height);
+		cv::Rect rect(_cords.y(_frame_height), _cords.x(_frame_width), _cords.width(_frame_width), _cords.height(_frame_height));
+		cv::Mat cropped = frame(rect);
+		cv::cvtColor(cropped,_roi_rect,cv::COLOR_GRAY2BGRA);
+	}
+
+	uint32_t x() { return _x; }
+	uint32_t y() { return _y; }
+
+	cv::Mat & mat() { return _roi_rect; }
+	cv::Point	top_left_point() {
+		return {(int)_cords.y(_frame_height), (int)_cords.x(_frame_width)};
+	}
+
+	cv::Point	bottom_right_point() {
+		return {(int)(_cords.y(_frame_height) + _cords.width(_frame_width)), (int)(_cords.x(_frame_width) + _cords.height(_frame_height))};
+	}
+
+private:
+	uint32_t	_x;
+	uint32_t	_y;
+	cv::Mat		_roi_rect;
+	uint32_t	_frame_width;
+	uint32_t	_frame_height;
+	ROI_Cords	_cords;
 };
 
 class ROI {
 public:
 	ROI( uint32_t overlay_width, uint32_t overlay_height)
-	: _percent_x(0.0), _percent_y(0.0), _percent_height(100.0), _percent_width(100.0),
+	: _percent_roi(0.0, 0.0, 100.0,100.0),
 	_overlay_width(overlay_width), _overlay_height(overlay_height)
 	{}
 
@@ -25,53 +74,28 @@ public:
 		mat.copyTo(_frame);
 	}
 	void set_roi(float x, float y, float width, float height) {
-		_percent_x = x;
-		_percent_y = y;
-		_percent_width = width;
-		_percent_height = height;
+		_percent_roi = ROI_Cords(x, y, width, height);
 	}
 	void clear() {
-		_percent_x = 0;
-		_percent_y = 0;
-		_percent_width = 100;
-		_percent_height = 100;
+		_percent_roi = ROI_Cords(0.0, 0.0, 100.0, 100.0);
 	}
 
-	uint32_t x() { return _roi_x(); }
-	uint32_t y() { return _roi_y(); }
-	uint32_t height() { return _roi_height(); }
-	uint32_t width() { return _roi_width(); }
-
-	cv::Mat roi() {
+	ROI_Rect roi() {
 		return _extract_roi();
 	}
 
 private:
-	uint32_t _roi_x() { return _overlay_width * (_percent_x / 100);}
-	uint32_t _roi_y() { return _overlay_height * (_percent_y / 100);}
-	uint32_t _roi_height() { return _overlay_height * (_percent_height / 100);}
-	uint32_t _roi_width() { return _overlay_width * (_percent_width / 100);}
-
-	cv::Mat _extract_roi() {
-		uint32_t x = 0, y = 0, width = 0, height = 0;
-		x =  _roi_x();
-		y = _roi_y();
-		width = _roi_width();
-		height = _roi_height();
-		cv::Rect roi_rect(y, x, width, height);
+	ROI_Rect _extract_roi() {
+		ROI_Rect roi(_overlay_width, _overlay_height, _percent_roi);
 		std::unique_lock<std::mutex> lock(_mutex);
-		if (_frame.empty())
-			return cv::Mat();
-		cv::Mat roi = _frame(roi_rect);
+			if (_frame.empty()) return ROI_Rect(_overlay_width, _overlay_height, _percent_roi);
+			roi.extract_roi(_frame);
 		lock.unlock();
 		return roi;
 	}
 
 private:
-	float		_percent_x;
-	float		_percent_y;
-	float		_percent_height;
-	float		_percent_width;
+	ROI_Cords	_percent_roi;
 	uint32_t	_overlay_width;
 	uint32_t	_overlay_height;
 	cv::Mat		_frame;

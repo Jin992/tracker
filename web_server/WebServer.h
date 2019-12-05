@@ -80,9 +80,9 @@ public:
 
 private:
     void _msg_handler(websocketpp::connection_hdl hdl, server::message_ptr msg) {
-        std::cout << "Received Request: >>>>>>>>>> " << msg->get_payload() << std::endl;
+        //std::cout << "Received Request: >>>>>>>>>> " << msg->get_payload() << std::endl;
         json11::Json respond = _respond.process_request(msg->get_payload());
-        std::cout << "Generated Respond: <<<<<<<<< " << respond.dump() << std::endl;
+        //std::cout << "Generated Respond: <<<<<<<<< " << respond.dump() << std::endl;
         //_json_parser(hdl, msg->get_payload());
         _endpoint.send(hdl, respond.dump(), websocketpp::frame::opcode::text);
 

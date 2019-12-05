@@ -27,13 +27,13 @@ json11::Json Responder::process_request(std::string const &request) {
 	/// check if service object defined
 	if (service["service"].is_null()) {
 		std::cerr << "Service is null" << std::endl;
-		return false;
+		return json11::Json();
 	}
 	/// Check if service is ptz
 	json11::Json::object action = service["action"].object_items();
 	std::string service_str = service["service"].string_value();
 	if (service_str == "PTZ")			return _ptz(action);
-	else if (service_str == "INIT")	return _init(action);
+	else if (service_str == "INIT")		return _init(action);
 	else if (service_str == "OVERLAY")	return _overlay(action);
 	else if (service_str == "IMAGING")	return _imaging(action);
 	else if (service_str == "TRACKER")	return _tracker(action);
@@ -172,7 +172,7 @@ json11::Json Responder::__init_set(json11::Json const &data) {
 }
 
 json11::Json Responder::__init_get(json11::Json const &data) {
-	if (data.string_value() == "") {
+	if (data.dump() == "") {
 		_cam_ctl.imaging()->getOptions("VideoToken", _img_params);
 		return json11::Json::object{
 			{"Response",json11::Json::object{

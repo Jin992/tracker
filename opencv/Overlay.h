@@ -22,20 +22,22 @@ public:
 		/// Get overlay image
 		ROI_Rect roi_rect = _roi.roi();
 
-		if (!roi_rect.empty())
+		if (!roi_rect.empty()) {
 			roi_rect.mat().copyTo(overlay(cv::Rect(roi_rect.y(), roi_rect.x(), roi_rect.mat().cols, roi_rect.mat().rows)));
-		/// Draw overlay frame
-		cv::Scalar color(255, 0, 0, 255);
-		cv::rectangle(overlay, roi_rect.top_left_point(), roi_rect.bottom_right_point(), color, 3);
+			/// Draw overlay frame
+			cv::Scalar color(255, 0, 0, 255);
+			cv::rectangle(overlay, roi_rect.top_left_point(), roi_rect.bottom_right_point(), color, 3);
 
-		std::vector<uchar> buf;
-		cv::imencode(".png", overlay, buf);
-		uchar *enc_msg = new uchar[buf.size()];
-		for (int i = 0; i < buf.size(); i++)
-			enc_msg[i] = buf[i];
-		std::string base64_string = base64_encode(enc_msg, buf.size());;
-		delete [] enc_msg;
-		return base64_string;
+			std::vector<uchar> buf;
+			cv::imencode(".png", overlay, buf);
+			uchar *enc_msg = new uchar[buf.size()];
+			for (int i = 0; i < buf.size(); i++)
+				enc_msg[i] = buf[i];
+			std::string base64_string = base64_encode(enc_msg, buf.size());;
+			delete [] enc_msg;
+			return base64_string;
+		}
+		return std::string("");
 	}
 
 private:

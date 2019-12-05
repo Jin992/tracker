@@ -36,6 +36,7 @@ public:
 	void extract_roi(cv::Mat const &frame) {
 		_x = _cords.x(_frame_width);
 		_y = _cords.y(_frame_height);
+		if (_cords.width(_frame_width) == 0 || _cords.height(_frame_height) == 0) return;
 		cv::Rect rect(_cords.y(_frame_height), _cords.x(_frame_width), _cords.width(_frame_width), _cords.height(_frame_height));
 		cv::Mat cropped = frame(rect);
 		cv::cvtColor(cropped,_roi_rect,cv::COLOR_GRAY2BGRA);
@@ -76,6 +77,9 @@ public:
 	void set_roi(float x, float y, float width, float height) {
 		_percent_roi = ROI_Cords(x, y, width, height);
 	}
+
+
+
 	void clear() {
 		_percent_roi = ROI_Cords(0.0, 0.0, 100.0, 100.0);
 	}

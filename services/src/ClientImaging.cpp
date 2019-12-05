@@ -67,8 +67,8 @@ int ClientImaging::setImagingSettings(std::string const & videoToken, float brig
         _timg__SetImagingSettingsResponse *_time__settings_response = soap_new__timg__SetImagingSettingsResponse(soap,-1);
         _timg__settings->VideoSourceToken = "VideoSource_1";
         _timg__settings->ImagingSettings = _timg__setting_response->ImagingSettings;
-        *_timg__settings->ImagingSettings->Brightness = brightness;
-        *_timg__settings->ImagingSettings->Contrast= contrast;
+        if (brightness >= 0) *_timg__settings->ImagingSettings->Brightness = brightness;
+        if (contrast >= 0) *_timg__settings->ImagingSettings->Contrast= contrast;
         if (SOAP_OK == proxyImaging.SetImagingSettings(_timg__settings, *_time__settings_response)) {
         }
     }

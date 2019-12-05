@@ -60,7 +60,7 @@ public:
     WebServer(CamCtl &cam_controll) :_respond(cam_controll) {
         // set logging settings
         _endpoint.set_error_channels(websocketpp::log::elevel::all);
-        _endpoint.set_access_channels(websocketpp::log::alevel::all);
+        _endpoint.clear_access_channels(websocketpp::log::alevel::all);
         // Turn on reuse addr
         _endpoint.set_reuse_addr(true);
         // Initialize Asio

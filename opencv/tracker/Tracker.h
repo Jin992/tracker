@@ -37,20 +37,14 @@ public:
             }
             cv::cvtColor(_frame_to_process, gray, cv::COLOR_BGR2GRAY);
             lock.unlock();
-            //cv2.threshold(grayscale, 128, 255, cv2.THRESH_BINARY)
             cv::Mat blackAndWhite;
             gray.copyTo(blackAndWhite);
             cv::threshold(gray, blackAndWhite, 128, 255, cv::THRESH_BINARY);
             _cam_ctl.overlay().roi().set_frame(gray);
 			_brightness_constast_control(gray);
-
         }
     }
-//auto start = std::chrono::steady_clock::now();
-//        std::forward<decltype(func)>(func)(std::forward<Args>(args)...);
-//        auto duration = std::chrono::duration_cast< TimeT>
-//                            (std::chrono::steady_clock::now() - start);
-//        return duration.count();
+
 private:
 	void _brightness_constast_control(cv::Mat const & gray) {
 
@@ -82,20 +76,15 @@ private:
 			if (min == 0) brightness = brightness + 1;
 			else brightness = brightness - 1;
 			send = true;
-			std::cout << "Brighness " << brightness << std::endl;
 			_brightness_timer = std::chrono::steady_clock::now();
 		}
 		if ( std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - _contrast_timer).count() > 100000) {
 			if (max == 255) contrast = contrast - 1;
 			else contrast = contrast + 1;
 			send = true;
-			std::cout << "Contrast " << contrast << std::endl;
 			_contrast_timer = std::chrono::steady_clock::now();
 		}
-		if (send) {
-			_cam_ctl.imaging()->setImagingSettings("", brightness, contrast, true);
-			std::cout << "Send" << std::endl;
-		}
+		if (send) _cam_ctl.imaging()->setImagingSettings("", brightness, contrast, true);
 		}
 
     void decode_video_stream() {

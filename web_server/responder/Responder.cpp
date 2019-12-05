@@ -299,7 +299,8 @@ json11::Json	Responder::__cmd_io(json11::Json const &data) {
 						{"type", "cmd"},
 						{"data", json11::Json::object{
 								{"cmd_name", data["cmd_value"].string_value()},
-								{"input", data["input"].string_value()}
+								{"input", data["input"].string_value()},
+								{"status", data["status"].string_value()}
 		}}}}}}};
 		return response;
 	}

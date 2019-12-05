@@ -44,7 +44,7 @@ add_executable(CPPDetector
         web_server/WebServer.cpp
         web_server/responder/Responder.cpp
         helpers/base64_encode.cpp
-        opencv/tracker/Tracker.cpp)
+        opencv/tracker/Tracker.cpp cam_ctl/CamCtl.cpp cam_ctl/CamCtl.h opencv/roi/Roi.cpp opencv/roi/Roi.h opencv/Overlay.cpp opencv/Overlay.h)
 
 target_link_libraries(CPPDetector -lcrypto -lssl -lz ${Boost_LIBRARIES}
         -pthread ${CMAKE_SOURCE_DIR}/web_server/json11/libjson11.a ${OpenCV_LIBS} )

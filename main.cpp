@@ -6,29 +6,16 @@
 #include "plugin/wsddapi.h"
 #include "plugin/wsseapi.h"
 #include "web_server/WebServer.h"
-#include "services/include/ClientImaging.h"
 #include "opencv/tracker/Tracker.h"
+#include "cam_ctl/CamCtl.h"
 
 int main(int argc, char** argv){
-    ClientPTZ *PTZ = new ClientPTZ("192.168.0.8", "evg", "Fh1234567890", true);
-    ClientMedia *Media = new ClientMedia("192.168.0.8", "evg", "Fh1234567890", true);
-    ClientImaging *Imaging = new ClientImaging("192.168.0.8", "evg", "Fh1234567890", true);
-    Media->createProfile("PTZ", "PTZ");
-    Media->addPTZConfiguration("PTZ", "PTZToken");
-    Media->getVideoSourceConfigurations();
-    PTZ->getConfiguration("PTZToken");
-    /*
- * Token:VideoSourceToken
-   SourceToken:VideoSource_1
- */
-    Imaging->setImagingSettings("d", 30, 30, 40);
-    WebServer server(PTZ, Imaging);
+	CamCtl cam_control("192.168.0.8", "evg", "Fh1234567890");
+
+    WebServer server(cam_control);
     server.run();
-    //Tracker tracker("rtsp://Evg:Fh16121992@192.168.0.8");
-    //tracker.start();
-    while(true){
-        sleep(1);
-    }
+    Tracker tracker("rtsp://Evg:Fh16121992@192.168.0.8", cam_control);
+    tracker.start();
     return 0;
 }
 

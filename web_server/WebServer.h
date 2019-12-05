@@ -12,6 +12,7 @@
 #include "services/include/ClientPTZ.h"
 #include <responder/Responder.h>
 #include "services/include/ClientImaging.h"
+#include "cam_ctl/CamCtl.h"
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 
@@ -56,7 +57,7 @@ private:
 
 class WebServer {
 public:
-    WebServer(ClientPTZ *PTZ, ClientImaging * imaging) : _ptz(PTZ), _imaging(imaging), _respond(_ptz, _imaging) {
+    WebServer(CamCtl &cam_controll) :_respond(cam_controll) {
         // set logging settings
         _endpoint.set_error_channels(websocketpp::log::elevel::all);
         _endpoint.set_access_channels(websocketpp::log::alevel::all);
@@ -98,8 +99,6 @@ private:
 
 private:
     server _endpoint;
-    ClientPTZ *_ptz;
-    ClientImaging * _imaging;
     Responder _respond;
 };
 

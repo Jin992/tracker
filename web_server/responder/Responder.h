@@ -10,31 +10,13 @@
 #include <iostream>
 #include <services/include/ClientPTZ.h>
 #include "services/include/ClientImaging.h"
+#include "cam_ctl/CamCtl.h"
 
-class ROI {
-public:
-    ROI()
-    : _percent_x(100.0), _percent_y(100.0), _percent_height(100.0), _percent_width(100.0)
-    {}
-    ROI(float percent_x, float percent_y, float percent_height, float percent_width)
-    :_percent_x(percent_x), _percent_y(percent_y), _percent_height(percent_height), _percent_width(percent_width)
-    {}
 
-    float x() { return _percent_x; }
-    float y() { return _percent_y; }
-    float height() { return _percent_height; }
-    float width() { return _percent_width; }
-
-private:
-    float _percent_x;
-    float _percent_y;
-    float _percent_height;
-    float _percent_width;
-};
 
 class Responder {
 public:
-	Responder(ClientPTZ* ptz, ClientImaging* img);
+	Responder(CamCtl &cam_ctl);
 	json11::Json process_request(std::string const &request);
 
 private:
@@ -58,12 +40,15 @@ private:
 	json11::Json	_tracker(json11::Json const &action);
 	json11::Json	__select_roi_tracker(json11::Json const &data);
 
+	/// IO Request parser
+	json11::Json	_io(json11::Json const &action);
+	json11::Json	__cmd_io(json11::Json const &data);
+
+
 
 private:
-	ClientPTZ*			_ptz_ptr;
-	ClientImaging*		_imaging_ptr;
+	CamCtl				&_cam_ctl;
 	ImagingParams		_img_params;
-	ROI					_region;
 };
 
 

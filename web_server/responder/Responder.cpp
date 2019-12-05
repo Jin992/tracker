@@ -22,7 +22,6 @@ json11::Json Responder::process_request(std::string const &request) {
 		std::cerr << err << std::endl;
 		return json11::Json();
 	}
-
 	/// Extract Request object from json
 	json11::Json::object service = json["Request"].object_items();
 	/// check if service object defined
@@ -32,24 +31,26 @@ json11::Json Responder::process_request(std::string const &request) {
 	}
 	/// Check if service is ptz
 	json11::Json::object action = service["action"].object_items();
-	if (service["service"].string_value() == "PTZ")				return _ptz(action);
-	else if (service["service"].string_value() == "INIT")		return _init(action);
-	else if (service["service"].string_value() == "OVERLAY")	return _overlay(action);
-	else if (service["service"].string_value() == "IMAGING")	return _imaging(action);
-	else if (service["service"].string_value() == "TRACKER")	return _tracker(action);
+	std::string service_str = service["service"].string_value();
+	if (service_str == "PTZ")			return _ptz(action);
+	else if (service_str == "INIT")	return _init(action);
+	else if (service_str == "OVERLAY")	return _overlay(action);
+	else if (service_str == "IMAGING")	return _imaging(action);
+	else if (service_str == "TRACKER")	return _tracker(action);
+	else if (service_str == "IO")		return _io(action);
 	return json11::Json();
 }
 
 json11::Json Responder::__ptz_status(std::string type) {
-    /// status - store currenct camera position
+	/// status - store currenct camera position
 	StatusPTZ status;
-    /// request camera position with onvif
+	/// request camera position with onvif
 	_cam_ctl.ptz()->getStatus("PTZ", status);
-    /// Generate response
+	/// Generate response
 	float zoomRange = 100 - 31;
 	float zoomRangeOneDegree = 1.0 / zoomRange;
 	float zoom_mod = 100 - status.zoom() * zoomRangeOneDegree ;
-    //float zoom_mod = (((zoom - 31) - zoomRange) * -1) * zoomRangeOneDegree;
+	//float zoom_mod = (((zoom - 31) - zoomRange) * -1) * zoomRangeOneDegree;
 	json11::Json response = json11::Json::object{
 		{"Response",json11::Json::object{
 			{"service", "PTZ"},

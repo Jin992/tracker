@@ -6,7 +6,8 @@
 
 
 ClientImaging::ClientImaging(std::string url, std::string user, std::string password, bool showCapabilities) :ClientDevice(url, user, password, showCapabilities) {
-    proxyImaging.soap_endpoint = _strUrl.c_str();
+	std::lock_guard<std::mutex> lock(_mutex);
+	proxyImaging.soap_endpoint = _strUrl.c_str();
     soap_register_plugin(proxyImaging.soap, soap_wsse);
 }
 
@@ -15,6 +16,7 @@ ClientImaging::~ClientImaging() {
 }
 
 int ClientImaging::getOptions(std::string const & videoToken, ImagingParams &img_params) {
+	std::lock_guard<std::mutex> lock(_mutex);
     if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyImaging.soap, NULL, _user.c_str(), _password.c_str())){
         return -1;
     }
@@ -37,6 +39,7 @@ int ClientImaging::getOptions(std::string const & videoToken, ImagingParams &img
    SourceToken:VideoSource_1
  */
 int ClientImaging::GetImagingSettings(std::string const & videoToken, ImagingParams &img_params) {
+	std::lock_guard<std::mutex> lock(_mutex);
     if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyImaging.soap, NULL, _user.c_str(), _password.c_str())){
         return -1;
     }
@@ -53,7 +56,8 @@ int ClientImaging::GetImagingSettings(std::string const & videoToken, ImagingPar
 }
 
 int ClientImaging::setImagingSettings(std::string const & videoToken, float brightness, float contrast, float irCut){
-    if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyImaging.soap, NULL, _user.c_str(), _password.c_str())){
+	std::lock_guard<std::mutex> lock(_mutex);
+	if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyImaging.soap, NULL, _user.c_str(), _password.c_str())){
         return -1;
     }
     _timg__GetImagingSettings* _timg__settings = soap_new__timg__GetImagingSettings(soap, -1);

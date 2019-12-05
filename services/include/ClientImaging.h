@@ -9,6 +9,7 @@
 #include "stdio.h"
 #include "wsseapi.h"
 #include <openssl/rsa.h>
+#include <mutex>
 #include "ClientDevice.h"
 #include "onvif/soapImagingBindingProxy.h"
 
@@ -70,6 +71,7 @@ public:
 
 protected:
     ImagingBindingProxy proxyImaging;
+    std::mutex			_mutex;
 };
 
 

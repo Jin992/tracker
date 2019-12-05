@@ -33,7 +33,9 @@ public:
 		uchar *enc_msg = new uchar[buf.size()];
 		for (int i = 0; i < buf.size(); i++)
 			enc_msg[i] = buf[i];
-		return base64_encode(enc_msg, buf.size());
+		std::string base64_string = base64_encode(enc_msg, buf.size());;
+		delete [] enc_msg;
+		return base64_string;
 	}
 
 private:

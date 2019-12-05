@@ -75,7 +75,7 @@ private:
 		}
 		//std::chrono::steady_clock::now();
 
-		if ( std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - _brightness_timer).count() > 1000000) {
+		if ( std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - _brightness_timer).count() > 100000) {
 			ImagingParams params;
 			_cam_ctl.imaging()->GetImagingSettings("", params);
 			if (min == 0) {
@@ -87,7 +87,7 @@ private:
 			}
 			_brightness_timer = std::chrono::steady_clock::now();
 		}
-		if ( std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - _contrast_timer).count() > 1000000) {
+		if ( std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - _contrast_timer).count() > 100000) {
 			ImagingParams params;
 			_cam_ctl.imaging()->GetImagingSettings("", params);
 			if (max == 255) {

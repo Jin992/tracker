@@ -33,7 +33,7 @@ public:
             gray.copyTo(blackAndWhite);
             cv::threshold(gray, blackAndWhite, 128, 255, cv::THRESH_BINARY);
 
-            _cam_ctl.overlay().roi().set_frame(gray);
+            _cam_ctl.overlay().roi().set_frame(blackAndWhite);
 			//_brightness_constast_control(gray);
 
         }

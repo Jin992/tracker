@@ -172,7 +172,7 @@ json11::Json Responder::__init_set(json11::Json const &data) {
 }
 
 json11::Json Responder::__init_get(json11::Json const &data) {
-	if (data.is_null()) {
+	if (data.string_value() == "") {
 		_cam_ctl.imaging()->getOptions("VideoToken", _img_params);
 		return json11::Json::object{
 			{"Response",json11::Json::object{

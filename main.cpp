@@ -12,11 +12,10 @@
 int main(int argc, char** argv){
 	CamCtl cam_control("192.168.0.8", "evg", "Fh1234567890");
 
-    WebServer server(cam_control);
-    server.run();
-    Tracker tracker("rtsp://Evg:Fh16121992@192.168.0.8", cam_control);
-    tracker.start();
-    return 0;
+	WebServer server(cam_control);
+	server.run();Tracker tracker("rtsp://Evg:Fh16121992@192.168.0.8", cam_control);
+	tracker.start();
+	return 0;
 }
 
 

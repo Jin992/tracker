@@ -32,16 +32,17 @@ json11::Json Responder::process_request(std::string const &request) {
 	/// Check if service is ptz
 	json11::Json::object action = service["action"].object_items();
 	std::string service_str = service["service"].string_value();
-	if (service_str == "PTZ")			return _ptz(action);
-	else if (service_str == "INIT")		return _init(action);
-	else if (service_str == "OVERLAY")	return _overlay(action);
-	else if (service_str == "IMAGING")	return _imaging(action);
-	else if (service_str == "TRACKER")	return _tracker(action);
-	else if (service_str == "IO")		return _io(action);
+	uint64_t  id = service["id"].int_value();
+	if (service_str == "PTZ")			return _ptz(action, id);
+	else if (service_str == "INIT")		return _init(action, id);
+	else if (service_str == "OVERLAY")	return _overlay(action, id);
+	else if (service_str == "IMAGING")	return _imaging(action, id);
+	else if (service_str == "TRACKER")	return _tracker(action, id);
+	else if (service_str == "IO")		return _io(action,id );
 	return json11::Json();
 }
 
-json11::Json Responder::__ptz_status(std::string type) {
+json11::Json Responder::__ptz_status(std::string type, uint64_t id) {
 	/// status - store currenct camera position
 	StatusPTZ status;
 	/// request camera position with onvif
@@ -53,6 +54,7 @@ json11::Json Responder::__ptz_status(std::string type) {
 	//float zoom_mod = (((zoom - 31) - zoomRange) * -1) * zoomRangeOneDegree;
 	json11::Json response = json11::Json::object{
 		{"Response",json11::Json::object{
+			{"id", (int)id},
 			{"service", "PTZ"},
 			{"action",  json11::Json::object{
 				{"type", type},
@@ -64,7 +66,7 @@ json11::Json Responder::__ptz_status(std::string type) {
 	return response;
 }
 
-json11::Json Responder::__ptz_move(json11::Json const &data) {
+json11::Json Responder::__ptz_move(json11::Json const &data, uint64_t id) {
 	if (_cam_ctl.ptz() != nullptr) {
 		float pan = data["pan"].number_value() * pan_mod;
 		if (data["pan"].number_value() > 180) {
@@ -92,6 +94,7 @@ json11::Json Responder::__ptz_move(json11::Json const &data) {
 		_cam_ctl.ptz()->absoluteMove("PTZ",  pan, 1, tilt, 1, zoom_mod, 1);
 		return json11::Json::object{
 			{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "PTZ"},
 				{"action",  json11::Json::object{
 					{"type", "move"},
@@ -104,58 +107,28 @@ json11::Json Responder::__ptz_move(json11::Json const &data) {
 	return json11::Json();
 }
 
-json11::Json Responder::_ptz(json11::Json const &action) {
+json11::Json Responder::_ptz(json11::Json const &action, uint64_t id) {
 	if (!action["data"].is_null()) {
 		json11::Json::object data = action["data"].object_items();
-		if (action["type"].string_value() == "move") return __ptz_move(data);
+		if (action["type"].string_value() == "move") return __ptz_move(data, id);
 	} else {
-		if (action["type"].string_value() == "status") return __ptz_status("status");
+		if (action["type"].string_value() == "status") return __ptz_status("status", id);
 	}
 	return json11::Json();
 }
 
-json11::Json Responder::_overlay(json11::Json const &action) {
-	if (action["data"]["id"].is_null()) {
-		_cam_ctl.overlay().roi().clear();
-		std::string encoded = _cam_ctl.overlay().drawRoi();
-		json11::Json::object data = action["data"].object_items();
-
-		if (action["type"].string_value() == "get") {
-			json11::Json response = json11::Json::object{
-				{"Response", json11::Json::object{
-					{"service", "OVERLAY"},
-					{"action",  json11::Json::object{
-						{"type", "get"},
-						{"data", json11::Json::object{
-							{"id",    1},
-							{"image", "data:image/png;base64," + encoded}
-			}}}}}}};
-			return response;
-		}
-	}else {
-		std::string encoded = _cam_ctl.overlay().drawRoi();
-		json11::Json::object data = action["data"].object_items();
-		if (action["type"].string_value() == "get") {
-			json11::Json response = json11::Json::object{
-				{"Response", json11::Json::object{
-					{"service", "OVERLAY"},
-					{"action",  json11::Json::object{
-						{"type", "get"},
-						{"data", json11::Json::object{
-							{"id",    1},
-							{"image", "data:image/png;base64," + encoded}
-			}}}}}}};
-			return response;
-		}
-	}
-	return json11::Json();
+json11::Json Responder::_overlay(json11::Json const &action, uint64_t id) {
+	if (action["data"]["id"].is_null())  _cam_ctl.overlay().roi().clear();
+	json11::Json response = json11::Json::object{{"blob","blob"}};
+	return response;
 }
 
-json11::Json Responder::__init_set(json11::Json const &data) {
+json11::Json Responder::__init_set(json11::Json const &data, uint64_t id) {
 	json11::Json response;
 	if (!data.is_null()) {
 		response = json11::Json::object{
 			{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "INIT"},
 				{"action",  json11::Json::object{
 					{"type", "set"},
@@ -171,11 +144,12 @@ json11::Json Responder::__init_set(json11::Json const &data) {
 	return response;
 }
 
-json11::Json Responder::__init_get(json11::Json const &data) {
+json11::Json Responder::__init_get(json11::Json const &data, uint64_t id) {
 	if (data.string_value() == "") {
 		_cam_ctl.imaging()->getOptions("VideoToken", _img_params);
 		return json11::Json::object{
 			{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "INIT"},
 				{"action",  json11::Json::object{
 					{"type", "get"},
@@ -186,6 +160,8 @@ json11::Json Responder::__init_get(json11::Json const &data) {
 						{"tiltRangeMax", 90},
 						{"zoomRangeMin", 100},
 						{"zoomRangeMax", 31},
+						{"videoHeight", 1080},
+						{"videoWidth", 1920},
 						{"brightnessRangeMax", _img_params.brightness().max()},
 						{"brightnessRangeMin", _img_params.brightness().min()},
 						{"contrastRangeMax", _img_params.contrast().max()},
@@ -194,6 +170,7 @@ json11::Json Responder::__init_get(json11::Json const &data) {
 	} else {
 		return json11::Json::object{
 			{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "INIT"},
 				{"action",  json11::Json::object{
 					{"type", "get"},
@@ -202,19 +179,20 @@ json11::Json Responder::__init_get(json11::Json const &data) {
 	}
 }
 
-json11::Json Responder::_init(json11::Json const &action) {
+json11::Json Responder::_init(json11::Json const &action, uint64_t id) {
 	json11::Json::object data = action["data"].object_items();
-	if (action["type"].string_value() == "get") return __init_get(data);
-	else if (action["type"].string_value() == "set") return  __init_set(data);
+	if (action["type"].string_value() == "get") return __init_get(data, id);
+	else if (action["type"].string_value() == "set") return  __init_set(data, id);
 	return json11::Json();
 }
 
-json11::Json Responder::__set_imaging(json11::Json const &data) {
+json11::Json Responder::__set_imaging(json11::Json const &data, uint64_t id) {
 	json11::Json response;
 	if (data.dump() != "") {
 		_cam_ctl.imaging()->setImagingSettings("", data["brightness"].number_value(), data["contrast"].number_value(), 0);
 		response = json11::Json::object{
 			{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "IMAGING"},
 				{"action",  json11::Json::object{
 					{"type", "set"},
@@ -227,13 +205,14 @@ json11::Json Responder::__set_imaging(json11::Json const &data) {
     return response;
 }
 
-json11::Json Responder::__get_imaging(json11::Json const &data) {
+json11::Json Responder::__get_imaging(json11::Json const &data, uint64_t id) {
 	json11::Json response;
 	if (data.string_value() == "") {
 		ImagingParams params;
 		_cam_ctl.imaging()->GetImagingSettings("VideoToken", params);
 		response = json11::Json::object{
 			{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "IMAGING"},
 				{"action",  json11::Json::object{
 					{"type", "status"},
@@ -246,20 +225,20 @@ json11::Json Responder::__get_imaging(json11::Json const &data) {
 	return response;
 }
 
-json11::Json Responder::_imaging(json11::Json const &action){
+json11::Json Responder::_imaging(json11::Json const &action, uint64_t id){
 	json11::Json::object data = action["data"].object_items();
-	if (action["type"].string_value() == "set") return __set_imaging(data);
-	else if (action["type"].string_value() == "status") return __get_imaging(data);
+	if (action["type"].string_value() == "set") return __set_imaging(data, id);
+	else if (action["type"].string_value() == "status") return __get_imaging(data, id);
 	return json11::Json();
 }
 
-json11::Json Responder::_tracker(json11::Json const &action) {
+json11::Json Responder::_tracker(json11::Json const &action, uint64_t id) {
 	json11::Json::object data = action["data"].object_items();
-	if (action["type"].string_value() == "select_roi") return __select_roi_tracker(data);
+	if (action["type"].string_value() == "select_roi") return __select_roi_tracker(data, id);
     return json11::Json();
 }
 
-json11::Json Responder::__select_roi_tracker(json11::Json const &data) {
+json11::Json Responder::__select_roi_tracker(json11::Json const &data, uint64_t id) {
 	json11::Json response;
 	if (data.dump() != "") {
 		_cam_ctl.overlay().roi().set_roi(
@@ -269,6 +248,7 @@ json11::Json Responder::__select_roi_tracker(json11::Json const &data) {
 				data["height"].number_value());
 
 		response = json11::Json::object{{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "TRACKER"},
 				{"action", json11::Json::object{
 				{"type", "select_roi"},
@@ -283,17 +263,18 @@ json11::Json Responder::__select_roi_tracker(json11::Json const &data) {
 	return response;
 }
 
-json11::Json	Responder::_io(json11::Json const &action) {
+json11::Json	Responder::_io(json11::Json const &action, uint64_t id) {
 	json11::Json::object data = action["data"].object_items();
-	if (action["type"].string_value() == "cmd") return __cmd_io(data);
+	if (action["type"].string_value() == "cmd") return __cmd_io(data, id);
 	return json11::Json();
 }
 
-json11::Json	Responder::__cmd_io(json11::Json const &data) {
+json11::Json	Responder::__cmd_io(json11::Json const &data, uint64_t id) {
 	json11::Json response;
 	if (data.dump() != "") {
 		/* Do something */
 		response = json11::Json::object{{"Response",json11::Json::object{
+				{"id", (int)id},
 				{"service", "IO"},
 				{"action", json11::Json::object{
 						{"type", "cmd"},

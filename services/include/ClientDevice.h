@@ -14,20 +14,20 @@
 class ClientDevice {
 
 public:
-    ClientDevice();
-    ClientDevice(std::string url, std::string user, std::string password, bool showCapabilities);
-    ~ClientDevice();
+	ClientDevice();
+	ClientDevice(std::string url, std::string user, std::string password, bool showCapabilities);
+	~ClientDevice();
 
 public:
-    bool _hasMedia;
-    bool _hasPTZ;
+	bool _hasMedia;
+	bool _hasPTZ;
 
 protected:
-    std::string _strUrl;
-    std::string _user;
-    std::string _password;
-    struct soap *soap;
-    DeviceBindingProxy proxyDevice;
+	std::string			_strUrl;
+	std::string			_user;
+	std::string			_password;
+	struct soap			*soap;
+	DeviceBindingProxy	proxyDevice;
 };
 
 

@@ -70,9 +70,9 @@ public:
 	_overlay_width(overlay_width), _overlay_height(overlay_height)
 	{}
 
-	void set_frame(cv::Mat mat) {
+	void set_frame(cv::Mat const &mat) {
 		std::lock_guard<std::mutex> guard(_mutex);
-		_frame = mat;
+		mat.copyTo(_frame);
 	}
 	void set_roi(float x, float y, float width, float height) {
 		_percent_roi = ROI_Cords(x, y, width, height);

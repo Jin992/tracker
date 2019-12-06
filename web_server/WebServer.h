@@ -57,7 +57,7 @@ private:
 
 class WebServer {
 public:
-    WebServer(CamCtl &cam_controll) :_respond(cam_controll) {
+    WebServer(CamCtl &cam_controll) :_respond(cam_controll), _cam_ctl(cam_controll) {
         // set logging settings
         _endpoint.set_error_channels(websocketpp::log::elevel::all);
         _endpoint.clear_access_channels(websocketpp::log::alevel::all);
@@ -80,11 +80,15 @@ public:
 
 private:
     void _msg_handler(websocketpp::connection_hdl hdl, server::message_ptr msg) {
-        //std::cout << "Received Request: >>>>>>>>>> " << msg->get_payload() << std::endl;
+        std::cout << "Received Request: >>>>>>>>>> " << msg->get_payload() << std::endl;
         json11::Json respond = _respond.process_request(msg->get_payload());
         //std::cout << "Generated Respond: <<<<<<<<< " << respond.dump() << std::endl;
-        //_json_parser(hdl, msg->get_payload());
-        _endpoint.send(hdl, respond.dump(), websocketpp::frame::opcode::text);
+        auto buf = _cam_ctl.overlay().overalay_buf();
+        if (respond["blob"].string_value()  == "blob") {
+        	std::lock_guard<std::mutex> lock(_cam_ctl.overlay().overlay_mutex());
+        	_endpoint.send(hdl, buf.get()->data(), buf.get()->size(), websocketpp::frame::opcode::binary);
+        }
+        else _endpoint.send(hdl, respond.dump(), websocketpp::frame::opcode::text);
 
     }
     void _start_server(){
@@ -100,6 +104,7 @@ private:
 private:
     server _endpoint;
     Responder _respond;
+	CamCtl &_cam_ctl;
 };
 
 

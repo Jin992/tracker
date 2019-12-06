@@ -11,39 +11,36 @@
 #include "cam_ctl/CamCtl.h"
 #include <chrono>
 #include <thread>
+#include <condition_variable>
 
 class Tracker {
 public:
-    Tracker(std::string url, CamCtl &cam_ctl)
-    : _url(url), _cap(url), _cam_ctl(cam_ctl), _brightness_timer(std::chrono::steady_clock::now()), _contrast_timer(std::chrono::steady_clock::now())
-    {
-        if (!_cap.isOpened())
-            throw std::string("Can't open device " + _url);
-    }
-    ~Tracker() {
-        _cap.release();
-    }
+	Tracker(std::string url, CamCtl &cam_ctl)
+	: _url(url), _cap(url), _cam_ctl(cam_ctl), _brightness_timer(std::chrono::steady_clock::now()),
+	_contrast_timer(std::chrono::steady_clock::now()), _frame_ready(false) {
+		if (!_cap.isOpened()) throw std::string("Can't open device " + _url);
+	}
 
-    void start(){
-    	std::thread capture(&Tracker::decode_video_stream, this);
-    	if (capture.joinable())
-    		capture.detach();
-        while (true) {
-            cv::Mat gray;
-            std::unique_lock<std::mutex> lock(_mutex);
-            if (_frame_to_process.empty()) {
-            	lock.unlock();
-				continue;
-            }
-            cv::cvtColor(_frame_to_process, gray, cv::COLOR_BGR2GRAY);
-            lock.unlock();
-            cv::Mat blackAndWhite;
-            gray.copyTo(blackAndWhite);
-            cv::threshold(gray, blackAndWhite, 128, 255, cv::THRESH_BINARY);
-            _cam_ctl.overlay().roi().set_frame(gray);
+	~Tracker() {
+		_cap.release();
+	}
+
+	void start(){
+		std::thread capture(&Tracker::decode_video_stream, this);
+		if (capture.joinable())
+			capture.detach();
+		while (true) {
+			std::unique_lock<std::mutex> lock(_mutex);
+			_cond.wait(lock, [this]{return _frame_ready;});
+			cv::Mat gray;
+			cv::cvtColor(_frame_to_process, gray, cv::COLOR_BGR2GRAY);
+			_frame_ready = false;
+			lock.unlock();
+			//cv::Mat blackAndWhite;
+			// cv::threshold(gray, blackAndWhite, 128, 255, cv::THRESH_BINARY);
 			_brightness_constast_control(gray);
-        }
-    }
+		}
+	}
 
 private:
 	void _brightness_constast_control(cv::Mat const & gray) {
@@ -87,26 +84,31 @@ private:
 		if (send) _cam_ctl.imaging()->setImagingSettings("", brightness, contrast, true);
 		}
 
-    void decode_video_stream() {
-    	while (true) {
-			cv::Mat frame;
+		void decode_video_stream() {
+		while (true) {
+			cv::Mat frame, gray;
 			_cap >> frame;
-			if (frame.empty())
-				continue;
-			std::unique_lock<std::mutex> lock(_mutex);
+			if (frame.empty()) continue;
+
+			cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+			_cam_ctl.overlay().roi().set_frame(gray);
+			std::lock_guard<std::mutex> lock(_mutex);
 			frame.copyTo(_frame_to_process);
-			lock.unlock();
+			_frame_ready = true;
+			_cond.notify_one();
 		}
     }
 
 private:
-    std::string											_url;
-    cv::VideoCapture									_cap;
-    CamCtl												&_cam_ctl;
+	std::string											_url;
+	cv::VideoCapture									_cap;
+	CamCtl												&_cam_ctl;
 	std::chrono::time_point<std::chrono::steady_clock>	_brightness_timer;
 	std::chrono::time_point<std::chrono::steady_clock>	_contrast_timer;
 	cv::Mat												_frame_to_process;
 	std::mutex											_mutex;
+	std::condition_variable								_cond;
+	bool												_frame_ready;
 
 
 
